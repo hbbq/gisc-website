@@ -13,7 +13,7 @@ marine instrumentation, robotics and other sectors.
 ## Latest News
 
 {% for item in collections.news | reverse %}
-{% if loop.index0 < 3 %}
+{% if forloop.index0 < 3 %}
 ### [{{ item.data.title }}]({{ item.url | url }})
 
 {{ item.data.published }}
