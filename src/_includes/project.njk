@@ -1,0 +1,33 @@
+---
+layout: base.njk
+---
+
+<article class="project">
+    <header>
+        <h1>{{ title }}</h1>
+
+        {% if status %}
+        <p><strong>Status:</strong> {{ status }}</p>
+        {% endif %}
+
+        {% if started %}
+        <p><strong>Started:</strong> {{ started }}</p>
+        {% endif %}
+
+        {% if departments %}
+        <p>
+            <strong>Department{% if departments.length > 1 %}s{% endif %}:</strong>
+
+            {% for departmentId in departments %}
+                {% for department in collections.department %}
+                    {% if department.data.id == departmentId %}
+                        <a href="{{ department.url }}">{{ department.data.title }}</a>{% if department.data.abbreviation %} ({{ department.data.abbreviation }}){% endif %}{% if not loop.last %}, {% endif %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </p>
+        {% endif %}
+    </header>
+
+    {{ content | safe }}
+</article>

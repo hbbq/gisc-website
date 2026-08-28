@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+
+# Eleventy output
+_site/
+
+# Local/environment files
+.env
+.env.*
+
+# OS/editor junk
+.DS_Store
+Thumbs.db

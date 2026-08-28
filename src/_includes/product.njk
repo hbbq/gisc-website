@@ -1,0 +1,52 @@
+---
+layout: base.njk
+---
+
+<article class="product">
+    <header>
+        <h1>{{ title }}</h1>
+
+        {% if model %}
+        <p><strong>Model:</strong> {{ model }}</p>
+        {% endif %}
+
+        {% if status %}
+        <p><strong>Status:</strong> {{ status }}</p>
+        {% endif %}
+
+        {% if revision %}
+        <p><strong>Revision:</strong> {{ revision }}</p>
+        {% endif %}
+
+        {% if departments %}
+        <p>
+            <strong>Department{% if departments.length > 1 %}s{% endif %}:</strong>
+
+            {% for departmentId in departments %}
+                {% for department in collections.department %}
+                    {% if department.data.id == departmentId %}
+                        <a href="{{ department.url }}">{{ department.data.title }}</a>{% if department.data.abbreviation %} ({{ department.data.abbreviation }}){% endif %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </p>
+        {% endif %}
+    </header>
+
+    {{ content | safe }}
+
+    {% set designDocs = collections.all | productDocs(page.inputPath, "design") %}
+
+    {% if designDocs.length %}
+    <section class="product-design">
+        <h2>Technical Documentation</h2>
+
+        <ul>
+        {% for doc in designDocs %}
+            <li><a href="{{ doc.url }}">{{ doc.data.title }}</a></li>
+        {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+</article>
