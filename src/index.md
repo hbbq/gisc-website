@@ -16,7 +16,7 @@ marine instrumentation, robotics and other sectors.
 {% if loop.index0 < 3 %}
 ### [{{ item.data.title }}]({{ item.url | url }})
 
-{{ item.data.date | date: "%Y-%m-%d" }}
+{{ item.data.published }}
 
 {{ item.data.summary }}
 {% endif %}
