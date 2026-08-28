@@ -36,6 +36,8 @@ layout: base.njk
     {{ content | safe }}
 
     {% set designDocs = collections.all | productDocs(page.inputPath, "design") %}
+    {% set schematicFiles = page.inputPath | productFiles("schematics") %}
+    {% set referenceFiles = page.inputPath | productFiles("references") %}
 
     {% if designDocs.length %}
     <section class="product-design">
@@ -44,6 +46,30 @@ layout: base.njk
         <ul>
         {% for doc in designDocs %}
             <li><a href="{{ doc.url | url }}">{{ doc.data.title }}</a></li>
+        {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+    {% if schematicFiles.length %}
+    <section class="product-schematics">
+        <h2>Schematics</h2>
+
+        <ul>
+        {% for file in schematicFiles %}
+            <li><a href="{{ file.url | url }}">{{ file.name }}</a></li>
+        {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
+
+    {% if referenceFiles.length %}
+    <section class="product-references">
+        <h2>References</h2>
+
+        <ul>
+        {% for file in referenceFiles %}
+            <li><a href="{{ file.url | url }}">{{ file.name }}</a></li>
         {% endfor %}
         </ul>
     </section>
