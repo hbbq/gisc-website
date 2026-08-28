@@ -1,0 +1,17 @@
+---
+layout: base.njk
+title: News
+permalink: /news/index.html
+---
+
+<h1>News</h1>
+
+{% for item in collections.news | reverse %}
+<article>
+    <h2><a href="{{ item.url | url }}">{{ item.data.title }}</a></h2>
+    <p><small>{{ item.data.published }}</small></p>
+    <p>{{ item.data.summary }}</p>
+</article>
+{% else %}
+<p>No news has been published.</p>
+{% endfor %}
