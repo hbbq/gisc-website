@@ -21,7 +21,7 @@ layout: base.njk
             {% for departmentId in departments %}
                 {% for department in collections.department %}
                     {% if department.data.id == departmentId %}
-                        <a href="{{ department.url }}">{{ department.data.title }}</a>{% if department.data.abbreviation %} ({{ department.data.abbreviation }}){% endif %}{% if not loop.last %}, {% endif %}
+                        <a href="{{ department.url | url }}">{{ department.data.title }}</a>{% if department.data.abbreviation %} ({{ department.data.abbreviation }}){% endif %}{% if not loop.last %}, {% endif %}
                     {% endif %}
                 {% endfor %}
             {% endfor %}

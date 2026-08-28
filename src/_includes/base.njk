@@ -3,17 +3,17 @@
 <head>
     <meta charset="utf-8">
     <title>{{ title }} | GISC</title>
-    <link rel="stylesheet" href="/assets/css/main.css">
+    <link rel="stylesheet" href="{{ '/assets/css/main.css' | url }}">
 </head>
 <body>
     <header>
         <strong>GISC</strong>
         <nav>
-            <a href="/">Home</a>
-            <a href="/departments/">Departments</a>
-            <a href="/projects/">Projects</a>
-            <a href="/products/">Products</a>
-            <a href="/about/">About</a>
+            <a href="{{ '/' | url }}">Home</a>
+            <a href="{{ '/departments/' | url }}">Departments</a>
+            <a href="{{ '/projects/' | url }}">Projects</a>
+            <a href="{{ '/products/' | url }}">Products</a>
+            <a href="{{ '/about/' | url }}">About</a>
         </nav>
     </header>
 

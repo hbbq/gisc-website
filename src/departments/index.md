@@ -8,7 +8,7 @@ title: Departments
 <ul>
 {% for department in collections.department %}
     <li>
-        <a href="{{ department.url }}">
+        <a href="{{ department.url | url }}">
             {{ department.data.title }}
         </a>{% if department.data.abbreviation %}({{ department.data.abbreviation }}){% endif %}
     </li>

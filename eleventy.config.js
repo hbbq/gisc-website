@@ -11,6 +11,7 @@ export default function (eleventyConfig) {
     });
 
     return {
+        pathPrefix: process.env.SITE_PATH_PREFIX || "/",
         dir: {
             input: "src",
             output: "_site"
