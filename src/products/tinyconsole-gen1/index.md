@@ -29,7 +29,7 @@ The platform is designed around a simple principle: small resources are not mere
 | Clock frequency | **1 MHz** |
 | Program memory | **8 KB Flash** |
 | Physical system memory | **512 B SRAM** |
-| Application-visible memory | **32 B** |
+| Defined application state memory | **32 B** |
 | Execution model | Resident launcher with one active title |
 
 The processor operates at 1 MHz. Applications are expected to be designed for this operating frequency rather than treating it as a reduced-performance development mode.
@@ -54,7 +54,7 @@ TinyConsole Gen 1 implements the **GISC TGA-128™ (Tiny Graphics Array)** displ
 
 The complete 16-byte TGA-128 framebuffer is directly readable and writable by applications.
 
-Video memory is explicitly considered part of the application-visible memory model. Applications may — and where appropriate **should** — use visible display state directly as application state rather than maintaining redundant representations in general-purpose memory.
+Video memory is explicitly considered part of the defined application state memory. Applications may — and where appropriate **should** — use visible display state directly as application state rather than maintaining redundant representations in general-purpose memory.
 
 This principle is designated the **Display-as-State Architecture**.
 
@@ -62,36 +62,52 @@ For example, a game world already represented by illuminated pixels need not mai
 
 ## 3. Memory Architecture
 
-TinyConsole Gen 1 provides **512 bytes of physical SRAM**, but deliberately exposes a much smaller defined application environment.
+TinyConsole Gen 1 provides **512 bytes of physical SRAM**, but deliberately defines a much smaller application state environment.
 
 ```text
 512 B PHYSICAL SYSTEM RAM
 
 +----------------------------------+
-| 16 B  TGA-128 Video Memory       |  Application accessible
+| 16 B  TGA-128 Video Memory       |  Application state
 +----------------------------------+
-| 16 B  Application Workspace      |  Application accessible
+| 16 B  Application State Memory   |  Application state
 +----------------------------------+
 |       TinyConsole System State   |
 +----------------------------------+
-|       Runtime / Stack            |
+|       Runtime / Stack            |  Transient use permitted
 +----------------------------------+
 |       Reserved                   |
 +----------------------------------+
 ```
 
-### 3.1 Application Workspace
+### 3.1 Application State Memory
 
-Each title is provided with a **16-byte general-purpose application workspace**.
+Each title is provided with **16 bytes of general-purpose Application State Memory**.
 
-The workspace is shared between titles and recycled when execution passes from one title to another. Applications should use this memory for state that cannot naturally be represented in the framebuffer.
+This memory is shared between titles and recycled when execution passes from one title to another. It is volatile and its contents are not guaranteed to survive a title change, reset, power loss, or system restart.
 
-Together with the framebuffer, an application therefore has **32 bytes of defined application-visible memory**:
+Applications use this memory for state that must be retained between application updates and cannot naturally be represented in the framebuffer.
 
-- **16 B general-purpose application workspace**
+Together with the framebuffer, a title therefore has **32 bytes of defined application state memory**:
+
+- **16 B general-purpose Application State Memory**
 - **16 B directly addressable TGA-128 video memory**
 
 Applications are encouraged to pack state efficiently and to exploit the known dimensions and ranges of platform data. Coordinates, directions, flags and other small-domain values need not occupy independent machine words.
+
+### 3.2 Static SRAM allocation rule
+
+A conforming TinyConsole title **MUST NOT allocate additional static SRAM for application state**.
+
+Application state that survives between calls or update cycles must reside in Application State Memory or TGA-128 Video Memory. Application-owned global variables, file-scope static variables, and function-local static variables that allocate SRAM for retained state are therefore not permitted.
+
+Automatic local variables are permitted. Loop counters, function-local temporaries, function call state, compiler-generated temporaries and similar transient values may use AVR CPU registers and the system stack as required by the compiler.
+
+The 32-byte application state limit therefore describes the state owned and retained by a title; it does not imply that execution of application code may never transiently use additional SRAM through the system stack.
+
+Constants and immutable application data stored in program Flash do not count as application state SRAM.
+
+This rule is normative in Platform Specification 1.0. Automated build-time enforcement is not required by the platform and may be provided by development tooling in a future revision.
 
 ## 4. Input System
 
@@ -128,7 +144,8 @@ A conforming title may:
 
 - read the three application controls;
 - read and write the complete TGA-128 framebuffer;
-- use the 16-byte Application Workspace;
+- use the 16-byte Application State Memory;
+- use automatic local variables and transient stack storage;
 - invoke TinyConsole runtime functions;
 - maintain state directly in video memory where appropriate; and
 - return control to the launcher through the platform execution model.
@@ -186,9 +203,11 @@ The architecture has demonstrated that shared runtime code allows additional sma
 - 1 MHz 8-bit AVR processor
 - 8 KB program Flash
 - 512 B physical SRAM
-- 32 B defined application-visible memory
-- 16 B general-purpose Application Workspace
+- 32 B defined application state memory
+- 16 B general-purpose Application State Memory
 - 16 B application-accessible TGA-128 video memory
+- no additional static SRAM allocation for title-owned state
+- transient local variables and compiler stack use permitted
 - 16 × 8 / 128-pixel / 1-bit monochrome graphics
 - 16 hardware display-intensity levels
 - three simultaneous-capable application controls over one ADC channel
