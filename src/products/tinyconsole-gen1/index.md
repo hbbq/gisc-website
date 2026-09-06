@@ -11,208 +11,56 @@ tags:
   - product
 ---
 
-# TinyConsole™ Gen 1 Platform Specification
+# TinyConsole™ Gen 1
 
-**Platform Specification 1.0**
-
-TinyConsole Gen 1 is a deliberately constrained embedded game platform built around an 8-bit AVR processor, a 128-pixel monochrome display, three application controls, and an intentionally small application memory model.
-
-The platform is designed around a simple principle: small resources are not merely a hardware limitation, but part of the programming model.
+TinyConsole Gen 1 is a deliberately constrained 8-bit entertainment platform built around the principle that small resources are not merely a hardware limitation, but part of the experience.
 
 > **1 MHz. 128 pixels. 32 bytes. 3 buttons.**
 
-## 1. Core System
+Built around the ATtiny85, TinyConsole combines a resident launcher, multiple compiled-in titles, dedicated TGA-128 display hardware, integrated controls, and a compact application memory model designed specifically for tiny games.
 
-| Property | Specification |
-| --- | --- |
-| Processor | ATtiny85, 8-bit AVR |
-| Clock frequency | **1 MHz** |
-| Program memory | **8 KB Flash** |
-| Physical system memory | **512 B SRAM** |
-| Defined application state memory | **32 B** |
-| Execution model | Resident launcher with one active title |
+## Platform highlights
 
-The processor operates at 1 MHz. Applications are expected to be designed for this operating frequency rather than treating it as a reduced-performance development mode.
+- **1 MHz 8-bit AVR processing**
+- **8 KB program Flash**
+- **512 B physical SRAM**
+- **32 B defined application state memory**
+- **TGA-128™ 16 × 8 graphics** with 128 individually addressable display elements
+- **Dedicated display processing hardware** using dual MAX7219 controllers
+- **Three integrated application controls** with simultaneous input support
+- **Dedicated hardware reset**
+- **Dual-Layer Processor Socket Architecture** with replaceable mechanical wear interface
+- **TC POWER™ system power interface**
+- **TGA™ modular graphics connector** including display power
+- **Real-time Power Integrity Indicator** implemented entirely in hardware
+- **True-off switched power architecture** with replaceable battery cells
 
-## 2. TGA-128™ Graphics System
+## TGA-128™ graphics
 
-TinyConsole Gen 1 implements the **GISC TGA-128™ (Tiny Graphics Array)** display architecture.
+The GISC TGA-128 graphics subsystem provides a native 16 × 8 one-bit raster display with a 16-byte framebuffer and 16 hardware-controlled intensity levels.
 
-> **TGA-128 defines a 16 × 8, one-bit raster graphics architecture providing 128 individually addressable display elements and a 16-byte native framebuffer.**
+Display multiplexing is handled by dedicated controller hardware, leaving the TinyConsole processor free to spend its 1 MHz on more important work.
 
-| Property | Specification |
-| --- | --- |
-| Resolution | **16 × 8 pixels** |
-| Total display elements | **128 pixels** |
-| Color depth | **1-bit monochrome** |
-| Video memory | **16 B** |
-| Display controllers | 2 × MAX7219 |
-| Controller topology | Serial daisy-chain |
-| Hardware intensity levels | 16 |
+TinyConsole applications can access video memory directly and are encouraged to use visible display state as application state where appropriate — the platform's **Display-as-State Architecture**.
 
-### 2.1 Application-accessible video memory
+## Designed to be small
 
-The complete 16-byte TGA-128 framebuffer is directly readable and writable by applications.
+TinyConsole does not attempt to hide its constraints.
 
-Video memory is explicitly considered part of the defined application state memory. Applications may — and where appropriate **should** — use visible display state directly as application state rather than maintaining redundant representations in general-purpose memory.
+Titles share a resident runtime and are designed around only 32 bytes of defined retained state: 16 bytes of general-purpose application memory and the 16-byte TGA-128 framebuffer.
 
-This principle is designated the **Display-as-State Architecture**.
+The result is a platform built around compact state, shared services, direct framebuffer manipulation, bit packing, and software written explicitly for an 8-bit 1 MHz machine.
 
-For example, a game world already represented by illuminated pixels need not maintain a second copy of that world solely for collision or state processing.
+## Reference hardware
 
-## 3. Memory Architecture
+Reference Hardware Revision A integrates the ATtiny85 processor interface, surface-mounted controls, hardware reset, power indication, TC POWER input, and the external TGA graphics interface on the TinyConsole motherboard.
 
-TinyConsole Gen 1 provides **512 bytes of physical SRAM**, but deliberately defines a much smaller application state environment.
+The processor is mounted through a stacked dual-socket arrangement so the upper socket can act as a replaceable wear component rather than repeatedly stressing the socket soldered to the motherboard.
 
-```text
-512 B PHYSICAL SYSTEM RAM
+The reference TC Power Supply uses replaceable battery cells and a physical inline power switch. When the batteries are depleted, replacement provides effectively zero-minute energy replenishment.
 
-+----------------------------------+
-| 16 B  TGA-128 Video Memory       |  Application state
-+----------------------------------+
-| 16 B  Application State Memory   |  Application state
-+----------------------------------+
-|       TinyConsole System State   |
-+----------------------------------+
-|       Runtime / Stack            |  Transient use permitted
-+----------------------------------+
-|       Reserved                   |
-+----------------------------------+
-```
+## Technical documentation
 
-### 3.1 Application State Memory
-
-Each title is provided with **16 bytes of general-purpose Application State Memory**.
-
-This memory is shared between titles and recycled when execution passes from one title to another. It is volatile and its contents are not guaranteed to survive a title change, reset, power loss, or system restart.
-
-Applications use this memory for state that must be retained between application updates and cannot naturally be represented in the framebuffer.
-
-Together with the framebuffer, a title therefore has **32 bytes of defined application state memory**:
-
-- **16 B general-purpose Application State Memory**
-- **16 B directly addressable TGA-128 video memory**
-
-Applications are encouraged to pack state efficiently and to exploit the known dimensions and ranges of platform data. Coordinates, directions, flags and other small-domain values need not occupy independent machine words.
-
-### 3.2 Static SRAM allocation rule
-
-A conforming TinyConsole title **MUST NOT allocate additional static SRAM for application state**.
-
-Application state that survives between calls or update cycles must reside in Application State Memory or TGA-128 Video Memory. Application-owned global variables, file-scope static variables, and function-local static variables that allocate SRAM for retained state are therefore not permitted.
-
-Automatic local variables are permitted. Loop counters, function-local temporaries, function call state, compiler-generated temporaries and similar transient values may use AVR CPU registers and the system stack as required by the compiler.
-
-The 32-byte application state limit therefore describes the state owned and retained by a title; it does not imply that execution of application code may never transiently use additional SRAM through the system stack.
-
-Constants and immutable application data stored in program Flash do not count as application state SRAM.
-
-This rule is normative in Platform Specification 1.0. Automated build-time enforcement is not required by the platform and may be provided by development tooling in a future revision.
-
-## 4. Input System
-
-TinyConsole Gen 1 provides three application controls and one dedicated system control.
-
-| Control | Function |
-| --- | --- |
-| UP | Application input |
-| DOWN | Application input |
-| ACTION | Application input |
-| RESET | Dedicated hardware system control |
-
-### 4.1 Analog Control Interface
-
-UP, DOWN and ACTION are encoded through a passive resistor network and read through a **single analog input channel**.
-
-The interface supports simultaneous button presses and therefore exposes all eight possible application-input states, including the no-button state.
-
-The reference implementation uses a VCC-referenced ADC arrangement so that encoded input levels remain proportional to supply voltage.
-
-### 4.2 Hardware Reset
-
-RESET is electrically independent of the Analog Control Interface and acts directly on the processor reset input.
-
-It provides an unconditional hardware-level restart of the TinyConsole system and return to the resident launcher.
-
-## 5. Software Execution Model
-
-TinyConsole firmware consists of a resident runtime, launcher, and one or more compiled-in titles.
-
-Only one title executes at a time. A title operates against the TinyConsole platform services and shared resources rather than owning a separate hardware environment.
-
-A conforming title may:
-
-- read the three application controls;
-- read and write the complete TGA-128 framebuffer;
-- use the 16-byte Application State Memory;
-- use automatic local variables and transient stack storage;
-- invoke TinyConsole runtime functions;
-- maintain state directly in video memory where appropriate; and
-- return control to the launcher through the platform execution model.
-
-Common display, input and system functionality is implemented by the TinyConsole runtime and shared by all titles, reducing the incremental program-memory cost of additional games.
-
-## 6. Display Intensity
-
-Display intensity is controlled by the MAX7219 hardware and provides **16 programmable intensity levels** independent of framebuffer contents.
-
-The minimum intensity setting is the recommended default for typical operation where sufficient visibility is available, reducing unnecessary LED power consumption.
-
-Display shutdown is available independently of intensity control through the display controller hardware.
-
-## 7. Power Architecture
-
-TinyConsole Gen 1 is intended for low-voltage battery operation.
-
-| Property | Specification |
-| --- | --- |
-| Nominal target supply | Approximately **3 V** |
-| Target battery configuration | 2-cell AA or AAA |
-| Development supply | 3.3 V or 5 V |
-
-The analog input architecture is supply-ratiometric when the ADC uses VCC as its reference, allowing the same input encoding to operate across supported supply conditions without voltage-specific application thresholds.
-
-Final battery form factor is implementation-dependent and is not mandated by Platform Specification 1.0.
-
-## 8. Platform Design Principles
-
-TinyConsole Gen 1 applications should be designed around the capabilities of the platform rather than attempting to conceal them.
-
-The platform therefore favors:
-
-- direct manipulation of display memory;
-- shared runtime services;
-- compact state representation;
-- bit packing where useful;
-- deterministic, small application state;
-- minimal duplication between visual and logical state; and
-- software designed explicitly for a 1 MHz, 8-bit execution environment.
-
-Resource constraints are considered part of the application interface.
-
-## 9. Reference Implementation Status
-
-The current reference implementation operates successfully at **1 MHz** and includes a resident launcher and multiple playable titles.
-
-The architecture has demonstrated that shared runtime code allows additional small titles to be incorporated with comparatively low incremental Flash and SRAM requirements.
-
-## 10. Platform Summary
-
-**TinyConsole™ Gen 1**
-
-- 1 MHz 8-bit AVR processor
-- 8 KB program Flash
-- 512 B physical SRAM
-- 32 B defined application state memory
-- 16 B general-purpose Application State Memory
-- 16 B application-accessible TGA-128 video memory
-- no additional static SRAM allocation for title-owned state
-- transient local variables and compiler stack use permitted
-- 16 × 8 / 128-pixel / 1-bit monochrome graphics
-- 16 hardware display-intensity levels
-- three simultaneous-capable application controls over one ADC channel
-- dedicated hardware RESET
-- resident launcher and shared runtime
-- nominal 3 V battery operation
+For the full programming model, memory rules, graphics architecture, motherboard implementation, power system, and reference hardware specification, see the **[TinyConsole Gen 1 Design Specification](./design/)**.
 
 **GISC TGA-128™ graphics. 128 pixels. No unnecessary ones.**
